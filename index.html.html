@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>직장인 계산기 - 내 권리, 쉽게 계산하자</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f8f9ff; color: #333; }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white; text-align: center; padding: 36px 20px 28px;
+  }
+  header h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; }
+  header p { margin-top: 8px; font-size: 1rem; opacity: 0.9; }
+  .badge { display: inline-block; background: rgba(255,255,255,0.2); border-radius: 20px; padding: 4px 14px; font-size: 0.8rem; margin-top: 10px; }
+
+  /* AD BANNER */
+  .ad-banner {
+    background: #fff3cd; border: 1.5px dashed #ffc107;
+    text-align: center; padding: 14px; font-size: 0.85rem; color: #856404;
+    margin: 0; letter-spacing: 0.3px;
+  }
+
+  /* NAV */
+  nav {
+    background: white; border-bottom: 2px solid #eee;
+    display: flex; overflow-x: auto; gap: 4px; padding: 10px 16px;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  nav button {
+    white-space: nowrap; padding: 8px 16px; border-radius: 20px;
+    border: 2px solid #e0e0e0; background: white; cursor: pointer;
+    font-size: 0.85rem; font-weight: 600; color: #555; transition: all 0.2s;
+  }
+  nav button.active, nav button:hover {
+    background: #667eea; color: white; border-color: #667eea;
+  }
+
+  /* MAIN */
+  main { max-width: 720px; margin: 0 auto; padding: 24px 16px; }
+
+  /* CARD */
+  .card {
+    background: white; border-radius: 20px; padding: 28px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.07); margin-bottom: 20px;
+    display: none;
+  }
+  .card.active { display: block; }
+  .card h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; }
+  .card .desc { font-size: 0.88rem; color: #888; margin-bottom: 20px; line-height: 1.6; }
+
+  /* HOME GRID */
+  .home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .home-item {
+    background: #f8f9ff; border: 2px solid #eef0ff; border-radius: 16px;
+    padding: 20px 16px; cursor: pointer; transition: all 0.2s; text-align: center;
+  }
+  .home-item:hover { border-color: #667eea; background: #eef0ff; transform: translateY(-2px); }
+  .home-item .icon { font-size: 2rem; margin-bottom: 8px; }
+  .home-item .name { font-weight: 700; font-size: 0.95rem; color: #333; }
+  .home-item .sub { font-size: 0.78rem; color: #888; margin-top: 4px; }
+
+  /* FORM */
+  .field { margin-bottom: 16px; }
+  label { display: block; font-size: 0.85rem; font-weight: 700; color: #555; margin-bottom: 6px; }
+  input, select {
+    width: 100%; padding: 12px 14px; border: 2px solid #e0e0e0;
+    border-radius: 12px; font-size: 0.95rem; outline: none; transition: border 0.2s;
+    background: #fafafa;
+  }
+  input:focus, select:focus { border-color: #667eea; background: white; }
+  .hint { font-size: 0.78rem; color: #aaa; margin-top: 4px; }
+
+  /* BUTTON */
+  .calc-btn {
+    width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white; border: none; border-radius: 14px; font-size: 1rem;
+    font-weight: 800; cursor: pointer; margin-top: 8px; transition: opacity 0.2s;
+  }
+  .calc-btn:hover { opacity: 0.9; }
+
+  /* RESULT */
+  .result {
+    display: none; margin-top: 20px; background: linear-gradient(135deg, #f0f4ff, #faf0ff);
+    border: 2px solid #667eea; border-radius: 16px; padding: 20px; text-align: center;
+  }
+  .result.show { display: block; }
+  .result .label { font-size: 0.85rem; color: #667eea; font-weight: 700; margin-bottom: 6px; }
+  .result .amount { font-size: 2rem; font-weight: 900; color: #4a3fa0; }
+  .result .note { font-size: 0.78rem; color: #999; margin-top: 8px; line-height: 1.5; }
+  .result-detail { margin-top: 12px; text-align: left; font-size: 0.83rem; color: #666; background: white; border-radius: 10px; padding: 12px 14px; }
+  .result-detail div { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f0f0f0; }
+  .result-detail div:last-child { border-bottom: none; }
+
+  /* BACK */
+  .back-btn {
+    background: none; border: none; color: #667eea; font-size: 0.88rem;
+    font-weight: 700; cursor: pointer; margin-bottom: 16px; padding: 0;
+  }
+  .back-btn:hover { text-decoration: underline; }
+
+  /* FOOTER */
+  footer { text-align: center; padding: 30px 16px; font-size: 0.8rem; color: #bbb; }
+
+  @media (max-width: 480px) {
+    header h1 { font-size: 1.5rem; }
+    .home-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .home-item { padding: 14px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💼 직장인 계산기</h1>
+  <p>내 권리, 쉽게 계산하자</p>
+  <span class="badge">✅ 무료 · 광고 없음 · 5초 계산</span>
+</header>
+
+<div class="ad-banner">
+  📢 광고 배너 영역 (Google AdSense 삽입 예정)
+</div>
+
+<nav id="nav">
+  <button class="active" onclick="showPage('home')">🏠 홈</button>
+  <button onclick="showPage('severance')">퇴직금</button>
+  <button onclick="showPage('annual')">연차수당</button>
+  <button onclick="showPage('unemployment')">실업급여</button>
+  <button onclick="showPage('weekly')">주휴수당</button>
+  <button onclick="showPage('overtime')">야근수당</button>
+</nav>
+
+<main>
+
+  <!-- HOME -->
+  <div class="card active" id="page-home">
+    <h2>👋 어떤 걸 계산할까요?</h2>
+    <p class="desc">항목을 선택하면 바로 계산할 수 있어요. 모든 계산은 고용노동부 기준을 따릅니다.</p>
+    <div class="home-grid">
+      <div class="home-item" onclick="showPage('severance')">
+        <div class="icon">💰</div>
+        <div class="name">퇴직금 계산기</div>
+        <div class="sub">퇴직하면 얼마 받을까?</div>
+      </div>
+      <div class="home-item" onclick="showPage('annual')">
+        <div class="icon">🌴</div>
+        <div class="name">연차수당 계산기</div>
+        <div class="sub">남은 연차, 돈으로 받으면?</div>
+      </div>
+      <div class="home-item" onclick="showPage('unemployment')">
+        <div class="icon">📋</div>
+        <div class="name">실업급여 계산기</div>
+        <div class="sub">실직 후 얼마나 받을까?</div>
+      </div>
+      <div class="home-item" onclick="showPage('weekly')">
+        <div class="icon">📅</div>
+        <div class="name">주휴수당 계산기</div>
+        <div class="sub">알바생 필수 체크!</div>
+      </div>
+      <div class="home-item" onclick="showPage('overtime')">
+        <div class="icon">🌙</div>
+        <div class="name">야근수당 계산기</div>
+        <div class="sub">야근비 제대로 받고 있나?</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 퇴직금 -->
+  <div class="card" id="page-severance">
+    <button class="back-btn" onclick="showPage('home')">← 뒤로</button>
+    <h2>💰 퇴직금 계산기</h2>
+    <p class="desc">1년 이상 근무한 직원은 퇴직금을 받을 권리가 있어요. 평균임금 기준으로 계산됩니다.</p>
+    <div class="field">
+      <label>입사일</label>
+      <input type="date" id="s-start">
+    </div>
+    <div class="field">
+      <label>퇴사일</label>
+      <input type="date" id="s-end">
+    </div>
+    <div class="field">
+      <label>최근 3개월 총 급여 (원)</label>
+      <input type="number" id="s-salary" placeholder="예: 9000000">
+      <div class="hint">세전 기본급 + 수당 포함</div>
+    </div>
+    <button class="calc-btn" onclick="calcSeverance()">계산하기</button>
+    <div class="result" id="r-severance">
+      <div class="label">예상 퇴직금</div>
+      <div class="amount" id="r-severance-amt"></div>
+      <div class="result-detail" id="r-severance-detail"></div>
+      <div class="note">※ 실제 지급액은 회사 규정·세금에 따라 다를 수 있습니다</div>
+    </div>
+  </div>
+
+  <!-- 연차수당 -->
+  <div class="card" id="page-annual">
+    <button class="back-btn" onclick="showPage('home')">← 뒤로</button>
+    <h2>🌴 연차수당 계산기</h2>
+    <p class="desc">미사용 연차는 돈으로 받을 수 있어요. 통상임금 기준으로 계산됩니다.</p>
+    <div class="field">
+      <label>월 통상임금 (원)</label>
+      <input type="number" id="a-salary" placeholder="예: 3000000">
+      <div class="hint">기본급 기준 (세전)</div>
+    </div>
+    <div class="field">
+      <label>미사용 연차 일수</label>
+      <input type="number" id="a-days" placeholder="예: 5">
+    </div>
+    <button class="calc-btn" onclick="calcAnnual()">계산하기</button>
+    <div class="result" id="r-annual">
+      <div class="label">예상 연차수당</div>
+      <div class="amount" id="r-annual-amt"></div>
+      <div class="result-detail" id="r-annual-detail"></div>
+      <div class="note">※ 회사 내규 및 근로계약서에 따라 다를 수 있습니다</div>
+    </div>
+  </div>
+
+  <!-- 실업급여 -->
+  <div class="card" id="page-unemployment">
+    <button class="back-btn" onclick="showPage('home')">← 뒤로</button>
+    <h2>📋 실업급여 계산기</h2>
+    <p class="desc">비자발적 퇴직 시 고용보험에서 지급됩니다. 이직일 전 18개월 중 180일 이상 가입이 기본 조건이에요.</p>
+    <div class="field">
+      <label>퇴직 전 하루 평균임금 (원)</label>
+      <input type="number" id="u-daily" placeholder="예: 100000">
+      <div class="hint">월급 ÷ 30일로 계산하세요</div>
+    </div>
+    <div class="field">
+      <label>고용보험 가입 기간</label>
+      <select id="u-period">
+        <option value="180">1년 미만 (180일~)</option>
+        <option value="365">1년 이상 ~ 3년 미만</option>
+        <option value="1095">3년 이상 ~ 5년 미만</option>
+        <option value="1825">5년 이상 ~ 10년 미만</option>
+        <option value="3650">10년 이상</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>나이</label>
+      <select id="u-age">
+        <option value="young">50세 미만</option>
+        <option value="old">50세 이상 / 장애인</option>
+      </select>
+    </div>
+    <button class="calc-btn" onclick="calcUnemployment()">계산하기</button>
+    <div class="result" id="r-unemployment">
+      <div class="label">예상 실업급여</div>
+      <div class="amount" id="r-unemployment-amt"></div>
+      <div class="result-detail" id="r-unemployment-detail"></div>
+      <div class="note">※ 실제 수급액은 고용센터 심사에 따라 다를 수 있습니다</div>
+    </div>
+  </div>
+
+  <!-- 주휴수당 -->
+  <div class="card" id="page-weekly">
+    <button class="back-btn" onclick="showPage('home')">← 뒤로</button>
+    <h2>📅 주휴수당 계산기</h2>
+    <p class="desc">주 15시간 이상 근무 시 유급 주휴일 1일치 임금을 받을 수 있어요. 알바생도 해당!</p>
+    <div class="field">
+      <label>시급 (원)</label>
+      <input type="number" id="w-wage" placeholder="예: 10030">
+      <div class="hint">2025년 최저시급 10,030원</div>
+    </div>
+    <div class="field">
+      <label>주 평균 근무 시간</label>
+      <input type="number" id="w-hours" placeholder="예: 25">
+      <div class="hint">15시간 미만이면 주휴수당 미발생</div>
+    </div>
+    <button class="calc-btn" onclick="calcWeekly()">계산하기</button>
+    <div class="result" id="r-weekly">
+      <div class="label">주휴수당 (1주)</div>
+      <div class="amount" id="r-weekly-amt"></div>
+      <div class="result-detail" id="r-weekly-detail"></div>
+      <div class="note">※ 소정근로시간 기준이며, 실제 계약 내용에 따라 다를 수 있습니다</div>
+    </div>
+  </div>
+
+  <!-- 야근수당 -->
+  <div class="card" id="page-overtime">
+    <button class="back-btn" onclick="showPage('home')">← 뒤로</button>
+    <h2>🌙 야근수당 계산기</h2>
+    <p class="desc">법정근로시간(주 40시간) 초과 시 통상임금의 1.5배를 받을 권리가 있어요.</p>
+    <div class="field">
+      <label>시급 또는 시간당 통상임금 (원)</label>
+      <input type="number" id="o-wage" placeholder="예: 15000">
+      <div class="hint">월급 ÷ 209시간으로 계산 가능</div>
+    </div>
+    <div class="field">
+      <label>이번 달 초과근무 시간</label>
+      <input type="number" id="o-hours" placeholder="예: 10">
+    </div>
+    <div class="field">
+      <label>야간근무 포함?</label>
+      <select id="o-night">
+        <option value="no">아니요</option>
+        <option value="yes">예 (밤 10시 ~ 새벽 6시)</option>
+      </select>
+    </div>
+    <button class="calc-btn" onclick="calcOvertime()">계산하기</button>
+    <div class="result" id="r-overtime">
+      <div class="label">추가 수당 합계</div>
+      <div class="amount" id="r-overtime-amt"></div>
+      <div class="result-detail" id="r-overtime-detail"></div>
+      <div class="note">※ 5인 미만 사업장은 가산수당 적용이 다를 수 있습니다</div>
+    </div>
+  </div>
+
+</main>
+
+<div class="ad-banner">
+  📢 광고 배너 영역 (Google AdSense 삽입 예정)
+</div>
+
+<footer>
+  직장인 계산기 · 고용노동부 기준 · 법률 자문이 아닌 참고용입니다<br>
+  문의: contact@example.com
+</footer>
+
+<script>
+const fmt = n => Math.round(n).toLocaleString('ko-KR') + '원';
+
+function showPage(id) {
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const idx = ['home','severance','annual','unemployment','weekly','overtime'].indexOf(id);
+  document.querySelectorAll('nav button')[idx].classList.add('active');
+  // hide results
+  document.querySelectorAll('.result').forEach(r => r.classList.remove('show'));
+}
+
+function calcSeverance() {
+  const start = new Date(document.getElementById('s-start').value);
+  const end = new Date(document.getElementById('s-end').value);
+  const salary = parseFloat(document.getElementById('s-salary').value);
+  if (!start.getTime() || !end.getTime() || !salary) return alert('모든 항목을 입력해주세요');
+  const days = (end - start) / (1000 * 60 * 60 * 24);
+  if (days < 365) return alert('퇴직금은 1년(365일) 이상 근무 시 발생합니다');
+  const avgDaily = salary / 90;
+  const amount = avgDaily * 30 * (days / 365);
+  const r = document.getElementById('r-severance');
+  document.getElementById('r-severance-amt').textContent = fmt(amount);
+  document.getElementById('r-severance-detail').innerHTML = `
+    <div><span>근무 기간</span><span>${Math.floor(days/365)}년 ${Math.floor((days%365)/30)}개월</span></div>
+    <div><span>일 평균임금</span><span>${fmt(avgDaily)}</span></div>
+    <div><span>30일분 평균임금</span><span>${fmt(avgDaily*30)}</span></div>
+    <div><span>근속연수 비율</span><span>${(days/365).toFixed(2)}년</span></div>
+  `;
+  r.classList.add('show');
+}
+
+function calcAnnual() {
+  const salary = parseFloat(document.getElementById('a-salary').value);
+  const days = parseFloat(document.getElementById('a-days').value);
+  if (!salary || !days) return alert('모든 항목을 입력해주세요');
+  const dailyWage = salary / 30;
+  const amount = dailyWage * days;
+  const r = document.getElementById('r-annual');
+  document.getElementById('r-annual-amt').textContent = fmt(amount);
+  document.getElementById('r-annual-detail').innerHTML = `
+    <div><span>월 통상임금</span><span>${fmt(salary)}</span></div>
+    <div><span>일 통상임금</span><span>${fmt(dailyWage)}</span></div>
+    <div><span>미사용 연차</span><span>${days}일</span></div>
+    <div><span>연차수당</span><span>${fmt(amount)}</span></div>
+  `;
+  r.classList.add('show');
+}
+
+function calcUnemployment() {
+  const daily = parseFloat(document.getElementById('u-daily').value);
+  const period = parseInt(document.getElementById('u-period').value);
+  const age = document.getElementById('u-age').value;
+  if (!daily) return alert('평균임금을 입력해주세요');
+
+  const rate = 0.6;
+  let benefit = daily * rate;
+  const minBenefit = 64408; // 2025년 최저
+  const maxBenefit = 66000; // 2025년 상한
+  benefit = Math.min(Math.max(benefit, minBenefit), maxBenefit);
+
+  // 지급일수
+  let duration;
+  if (period < 365) duration = 120;
+  else if (period < 1095) { duration = age === 'old' ? 180 : 150; }
+  else if (period < 1825) { duration = age === 'old' ? 210 : 180; }
+  else if (period < 3650) { duration = age === 'old' ? 240 : 210; }
+  else { duration = age === 'old' ? 270 : 240; }
+
+  const total = benefit * duration;
+  const r = document.getElementById('r-unemployment');
+  document.getElementById('r-unemployment-amt').textContent = fmt(total);
+  document.getElementById('r-unemployment-detail').innerHTML = `
+    <div><span>일일 수급액</span><span>${fmt(benefit)}</span></div>
+    <div><span>수급 기간</span><span>${duration}일</span></div>
+    <div><span>월 예상 수령액</span><span>${fmt(benefit*30)}</span></div>
+    <div><span>총 수급액</span><span>${fmt(total)}</span></div>
+  `;
+  r.classList.add('show');
+}
+
+function calcWeekly() {
+  const wage = parseFloat(document.getElementById('w-wage').value);
+  const hours = parseFloat(document.getElementById('w-hours').value);
+  if (!wage || !hours) return alert('모든 항목을 입력해주세요');
+  if (hours < 15) return alert('주 15시간 미만은 주휴수당이 발생하지 않습니다');
+  const weeklyHours = Math.min(hours, 40);
+  const amount = (weeklyHours / 40) * 8 * wage;
+  const r = document.getElementById('r-weekly');
+  document.getElementById('r-weekly-amt').textContent = fmt(amount);
+  document.getElementById('r-weekly-detail').innerHTML = `
+    <div><span>시급</span><span>${fmt(wage)}</span></div>
+    <div><span>주 근무시간</span><span>${hours}시간</span></div>
+    <div><span>주휴수당 산정시간</span><span>${((weeklyHours/40)*8).toFixed(1)}시간</span></div>
+    <div><span>주휴수당</span><span>${fmt(amount)}</span></div>
+  `;
+  r.classList.add('show');
+}
+
+function calcOvertime() {
+  const wage = parseFloat(document.getElementById('o-wage').value);
+  const hours = parseFloat(document.getElementById('o-hours').value);
+  const night = document.getElementById('o-night').value;
+  if (!wage || !hours) return alert('모든 항목을 입력해주세요');
+  const overtimePay = wage * hours * 1.5;
+  const nightPay = night === 'yes' ? wage * hours * 0.5 : 0;
+  const total = overtimePay + nightPay;
+  const r = document.getElementById('r-overtime');
+  document.getElementById('r-overtime-amt').textContent = fmt(total);
+  document.getElementById('r-overtime-detail').innerHTML = `
+    <div><span>시간당 통상임금</span><span>${fmt(wage)}</span></div>
+    <div><span>초과근무 수당 (×1.5)</span><span>${fmt(overtimePay)}</span></div>
+    ${night === 'yes' ? `<div><span>야간 가산수당 (×0.5)</span><span>${fmt(nightPay)}</span></div>` : ''}
+    <div><span>합계</span><span>${fmt(total)}</span></div>
+  `;
+  r.classList.add('show');
+}
+</script>
+</body>
+</html>
